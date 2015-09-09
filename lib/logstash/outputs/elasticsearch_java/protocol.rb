@@ -62,7 +62,7 @@ module LogStash
 
           def self.clear_client()
             CLIENT_MUTEX.synchronize {
-              @client = null
+              @client = nil
             }
           end
 
