@@ -1,7 +1,7 @@
 require_relative "../../../spec/es_spec_helper"
 
 describe "transport client create actions", :integration => true do
-  require "logstash/outputs/elasticsearch"
+  require "logstash/outputs/elasticsearch_java"
   require "elasticsearch"
 
   def get_es_output(action, id = nil)
@@ -10,12 +10,12 @@ describe "transport client create actions", :integration => true do
       "index" => "logstash-create",
       "template_overwrite" => true,
       "protocol" => "transport",
-      "host" => get_host(),
+      "hosts" => get_host(),
       "port" => get_port('transport'),
       "action" => action
     }
     settings['document_id'] = id unless id.nil?
-    LogStash::Outputs::ElasticSearch.new(settings)
+    LogStash::Outputs::ElasticSearchJava.new(settings)
   end
 
   before :each do
