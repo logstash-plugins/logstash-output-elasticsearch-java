@@ -1,5 +1,5 @@
 require_relative "../../../../spec/es_spec_helper"
-require "logstash/outputs/elasticsearch/protocol"
+require "logstash/outputs/elasticsearch_java/protocol"
 
 describe "elasticsearch node client", :integration => true do
   # Test ElasticSearch Node Client

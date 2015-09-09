@@ -2,7 +2,7 @@ require_relative "../../../spec/es_spec_helper"
 
 describe "send messages to ElasticSearch using HTTPS", :elasticsearch_secure => true do
   subject do
-    require "logstash/outputs/elasticsearch"
+    require "logstash/outputs/elasticsearch_java"
     settings = {
       "protocol" => "http",
       "node_name" => "logstash",
@@ -16,7 +16,7 @@ describe "send messages to ElasticSearch using HTTPS", :elasticsearch_secure => 
       #"truststore" => "/tmp/ca/truststore.jks",
       #"truststore_password" => "testeteste"
     }
-    next LogStash::Outputs::ElasticSearch.new(settings)
+    next LogStash::Outputs::ElasticSearchJava.new(settings)
   end
 
   before :each do
@@ -33,7 +33,7 @@ end
 
 describe "connect using HTTP Authentication", :elasticsearch_secure => true do
   subject do
-    require "logstash/outputs/elasticsearch"
+    require "logstash/outputs/elasticsearch_java"
     settings = {
       "protocol" => "http",
       "cluster" => "elasticsearch",
@@ -41,7 +41,7 @@ describe "connect using HTTP Authentication", :elasticsearch_secure => true do
       "user" => "user",
       "password" => "changeme",
     }
-    next LogStash::Outputs::ElasticSearch.new(settings)
+    next LogStash::Outputs::ElasticSearchJava.new(settings)
   end
 
   before :each do
@@ -58,7 +58,7 @@ end
 
 describe "send messages to ElasticSearch using HTTPS", :elasticsearch_secure => true do
   subject do
-    require "logstash/outputs/elasticsearch"
+    require "logstash/outputs/elasticsearch_java"
     settings = {
       "protocol" => "http",
       "node_name" => "logstash",
@@ -72,7 +72,7 @@ describe "send messages to ElasticSearch using HTTPS", :elasticsearch_secure => 
       #"truststore" => "/tmp/ca/truststore.jks",
       #"truststore_password" => "testeteste"
     }
-    next LogStash::Outputs::ElasticSearch.new(settings)
+    next LogStash::Outputs::ElasticSearchJava.new(settings)
   end
 
   before :each do
@@ -89,7 +89,7 @@ end
 
 describe "connect using HTTP Authentication", :elasticsearch_secure => true do
   subject do
-    require "logstash/outputs/elasticsearch"
+    require "logstash/outputs/elasticsearch_java"
     settings = {
       "protocol" => "http",
       "cluster" => "elasticsearch",
@@ -97,7 +97,7 @@ describe "connect using HTTP Authentication", :elasticsearch_secure => true do
       "user" => "user",
       "password" => "changeme",
     }
-    next LogStash::Outputs::ElasticSearch.new(settings)
+    next LogStash::Outputs::ElasticSearchJava.new(settings)
   end
 
   before :each do

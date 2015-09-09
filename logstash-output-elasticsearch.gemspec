@@ -1,10 +1,9 @@
 Gem::Specification.new do |s|
-
-  s.name            = 'logstash-output-elasticsearch'
-  s.version         = '1.0.5'
+  s.name            = 'logstash-output-elasticsearch_java'
+  s.version         = '1.1.0'
   s.licenses        = ['apache-2.0']
-  s.summary         = "Logstash Output to Elasticsearch"
-  s.description     = "Output events to elasticsearch"
+  s.summary         = "Logstash Output to Elasticsearch using Java node/transport client"
+  s.description     = "Output events to elasticsearch using the java client"
   s.authors         = ["Elastic"]
   s.email           = 'info@elastic.co'
   s.homepage        = "http://logstash.net/"
@@ -28,13 +27,6 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency 'ftw', '~> 0.0.42'
   s.add_development_dependency 'logstash-input-generator'
-
-
-  if RUBY_PLATFORM == 'java'
-    s.platform = RUBY_PLATFORM
-    s.add_runtime_dependency "manticore", '~> 0.4.2'
-  end
-
   s.add_development_dependency 'logstash-devutils'
   s.add_development_dependency 'longshoreman'
 end
