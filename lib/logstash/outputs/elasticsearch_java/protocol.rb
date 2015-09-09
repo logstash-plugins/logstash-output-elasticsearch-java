@@ -1,4 +1,4 @@
-require "logstash/outputs/elasticsearch"
+require "logstash/outputs/elasticsearch_java"
 require "cabin"
 require "base64"
 
@@ -43,88 +43,6 @@ module LogStash::Outputs::Elasticsearch
 
       public(:initialize, :template_install)
     end
-
-    class HTTPClient < Base
-      private
-
-      DEFAULT_OPTIONS = {
-        :port => 9200
-      }
-
-      def initialize(options={})
-        super
-        require "elasticsearch" # gem 'elasticsearch-ruby'
-        # manticore http transport
-        require "elasticsearch/transport/transport/http/manticore"
-        @options = DEFAULT_OPTIONS.merge(options)
-        @client = client
-      end
-
-      def build_client(options)
-        uri = "#{options[:protocol]}://#{options[:host]}:#{options[:port]}#{options[:client_settings][:path]}"
-
-        client_options = {
-          :host => [uri],
-          :ssl => options[:client_settings][:ssl],
-          :transport_options => {  # manticore settings so we
-            :socket_timeout => 0,  # do not timeout socket reads
-            :request_timeout => 0,  # and requests
-            :proxy => options[:client_settings][:proxy]
-          },
-          :transport_class => ::Elasticsearch::Transport::Transport::HTTP::Manticore
-        }
-
-        if options[:user] && options[:password] then
-          token = Base64.strict_encode64(options[:user] + ":" + options[:password])
-          client_options[:headers] = { "Authorization" => "Basic #{token}" }
-        end
-
-        Elasticsearch::Client.new client_options
-      end
-
-      def self.normalize_bulk_response(bulk_response)
-        if bulk_response["errors"]
-          # The structure of the response from the REST Bulk API is follows:
-          # {"took"=>74, "errors"=>true, "items"=>[{"create"=>{"_index"=>"logstash-2014.11.17",
-          #                                                    "_type"=>"logs",
-          #                                                    "_id"=>"AUxTS2C55Jrgi-hC6rQF",
-          #                                                    "_version"=>1,
-          #                                                    "status"=>400,
-          #                                                    "error"=>"MapperParsingException[failed to parse]..."}}]}
-          # where each `item` is a hash of {OPTYPE => Hash[]}. calling first, will retrieve 
-          # this hash as a single array with two elements, where the value is the second element (i.first[1])
-          # then the status of that item is retrieved.
-          {"errors" => true, "statuses" => bulk_response["items"].map { |i| i.first[1]['status'] }}
-        else
-          {"errors" => false}
-        end
-      end
-
-      def bulk(actions)
-        bulk_response = @client.bulk(:body => actions.collect do |action, args, source|
-          if source
-            next [ { action => args }, source ]
-          else
-            next { action => args }
-          end
-        end.flatten)
-
-        self.class.normalize_bulk_response(bulk_response)
-      end # def bulk
-
-      def template_exists?(name)
-        @client.indices.get_template(:name => name)
-        return true
-      rescue Elasticsearch::Transport::Transport::Errors::NotFound
-        return false
-      end # def template_exists?
-
-      def template_put(name, template)
-        @client.indices.put_template(:name => name, :body => template)
-      end # template_put
-
-      public(:bulk)
-    end # class HTTPClient
 
     class NodeClient < Base
       private
@@ -254,9 +172,21 @@ module LogStash::Outputs::Elasticsearch
             else
               raise(LogStash::ConfigurationError, "Specifying action => 'create_unless_exists' without a document '_id' is not supported.")
             end
+          when "update"
+            unless args[:_id].nil?
+              request = org.elasticsearch.action.update.UpdateRequest.new(args[:_index], args[:_type], args[:_id])
+              request.routing(args[:_routing]) if args[:_routing]
+              request.doc(source)
+              if @options[:doc_as_upsert]
+                request.docAsUpsert(true)
+              else
+                request.upsert(args[:_upsert]) if args[:_upsert]
+              end
+            else
+              raise(LogStash::ConfigurationError, "Specifying action => 'update' without a document '_id' is not supported.")
+            end
           else
             raise(LogStash::ConfigurationError, "action => '#{action_name}' is not currently supported.")
-          #when "update"
         end # case action
 
         request.type(args[:_type]) if args[:_type]
