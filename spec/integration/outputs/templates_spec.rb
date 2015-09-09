@@ -1,19 +1,19 @@
 require_relative "../../../spec/es_spec_helper"
 
 describe "index template expected behavior", :integration => true do
-  ["transport", "http"].each do |protocol|
+  ["transport"].each do |protocol|
     context "with protocol => #{protocol}" do
         
       subject! do
-        require "logstash/outputs/elasticsearch"
+        require "logstash/outputs/elasticsearch_java"
         settings = {
           "manage_template" => true,
           "template_overwrite" => true,
           "protocol" => protocol,
-          "host" => "#{get_host()}",
-          "port" => "#{get_port(protocol)}"
+          "hosts" => "#{get_host()}",
+          "port" => "#{get_port('transport')}"
         }
-        next LogStash::Outputs::ElasticSearch.new(settings)
+        next LogStash::Outputs::ElasticSearchJava.new(settings)
       end
 
       before :each do
