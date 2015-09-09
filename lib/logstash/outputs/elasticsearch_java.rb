@@ -179,7 +179,7 @@ class LogStash::Outputs::ElasticSearchJava < LogStash::Outputs::Base
   # option.
   # This MUST be set for either protocol to work (node or transport)! The internal Elasticsearch node
   # will bind to this ip. This ip MUST be reachable by all nodes in the Elasticsearch cluster
-  config :network_host, :validate => :string, :required => true
+  config :network_host, :validate => :string
 
   # This sets the local port to bind to. Equivalent to the Elasticsrearch option 'transport.tcp.port'
   config :transport_tcp_port, :validate => :number
@@ -303,11 +303,6 @@ class LogStash::Outputs::ElasticSearchJava < LogStash::Outputs::Base
     @retry_queue_not_full = ConditionVariable.new
     @retry_queue = Queue.new
 
-
-    if @protocol =='node' && !@network_host
-      raise LogStash::ConfigurationError, "network_host MUST be set if the 'node' protocol is in use! If this is set incorrectly Logstash will hang attempting to connect!"
-    end
-
     client_settings = {}
     client_settings["cluster.name"] = @cluster if @cluster
     client_settings["network.host"] = @network_host if @network_host
@@ -361,6 +356,7 @@ class LogStash::Outputs::ElasticSearchJava < LogStash::Outputs::Base
         @logger.error("Failed to install template",
                       :message => e.message,
                       :error_class => e.class.name,
+                      :backtrace => e.backtrace
                       )
       end
     end
@@ -445,7 +441,7 @@ class LogStash::Outputs::ElasticSearchJava < LogStash::Outputs::Base
     es_actions = actions.map { |a, doc, event| [a, doc, event.to_hash] }
     @submit_mutex.lock
     begin
-      bulk_response = @client.bulk(es_actions)
+      bulk_response = client.bulk(es_actions)
     ensure
       @submit_mutex.unlock
     end
