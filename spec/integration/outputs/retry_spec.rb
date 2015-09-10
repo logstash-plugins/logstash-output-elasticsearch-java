@@ -21,6 +21,7 @@ describe "failures in bulk class expected behavior", :integration => true do
       "manage_template" => true,
       "index" => "logstash-2014.11.17",
       "template_overwrite" => true,
+      "network_host" => get_local_host,
       "protocol" => 'transport',
       "hosts" => get_host(),
       "port" => get_port('transport'),
