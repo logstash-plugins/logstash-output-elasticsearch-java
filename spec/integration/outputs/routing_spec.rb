@@ -32,60 +32,6 @@ shared_examples "a routing indexer" do
     end
 end
 
-describe "(http protocol) index events with static routing", :integration => true do
-  it_behaves_like 'a routing indexer' do
-    let(:routing) { "test" }
-    let(:config) {
-      <<-CONFIG
-      input {
-        generator {
-          message => "hello world"
-          count => #{event_count}
-          type => "#{type}"
-        }
-      }
-      output {
-        elasticsearch {
-          host => "#{get_host()}"
-          port => "#{get_port('http')}"
-          protocol => "http"
-          index => "#{index}"
-          flush_size => #{flush_size}
-          routing => "#{routing}"
-        }
-      }
-      CONFIG
-    }
-  end
-end
-
-describe "(http_protocol) index events with fieldref in routing value", :integration => true do
-  it_behaves_like 'a routing indexer' do
-    let(:routing) { "test" }
-    let(:config) {
-      <<-CONFIG
-      input {
-        generator {
-          message => "#{routing}"
-          count => #{event_count}
-          type => "#{type}"
-        }
-      }
-      output {
-        elasticsearch {
-          host => "#{get_host()}"
-          port => "#{get_port('http')}"
-          protocol => "http"
-          index => "#{index}"
-          flush_size => #{flush_size}
-          routing => "%{message}"
-        }
-      }
-      CONFIG
-    }
-  end
-end
-
 describe "(transport protocol) index events with fieldref in routing value", :integration => true do
   it_behaves_like 'a routing indexer' do
     let(:routing) { "test" }
@@ -99,8 +45,8 @@ describe "(transport protocol) index events with fieldref in routing value", :in
         }
       }
       output {
-        elasticsearch {
-          host => "#{get_host()}"
+        elasticsearch_java {
+          hosts => "#{get_host()}"
           port => "#{get_port('transport')}"
           protocol => "transport"
           index => "#{index}"
