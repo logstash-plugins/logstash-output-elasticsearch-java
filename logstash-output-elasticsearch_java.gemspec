@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name            = 'logstash-output-elasticsearch_java'
-  s.version         = '2.0.0.beta6'
+  s.version         = '2.0.0.beta7'
   s.licenses        = ['apache-2.0']
   s.summary         = "Logstash Output to Elasticsearch using Java node/transport client"
   s.description     = "Output events to elasticsearch using the java client"
