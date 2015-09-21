@@ -1,7 +1,7 @@
 require "logstash/devutils/rake"
 
 desc "Get jars"
-task :get_jars do
+task :vendor do
   version = "2.0.0-beta2"
   jar_target = 'vendor/jar-dependencies/runtime-jars'
   url = "https://download.elasticsearch.org/elasticsearch/release/org/elasticsearch/distribution/tar/elasticsearch/#{version}/elasticsearch-#{version}.tar.gz"
