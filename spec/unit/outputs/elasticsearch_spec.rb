@@ -3,7 +3,11 @@ require_relative "../../../spec/es_spec_helper"
 describe "outputs/elasticsearch_java" do
   context "registration" do
     it "should register" do
-      output = LogStash::Plugin.lookup("output", "elasticsearch_java").new("protocol" => "transport", "manage_template" => "false")
+      output = LogStash::Plugin.lookup("output", "elasticsearch_java").new(
+        "protocol" => "transport",
+        "network_host" => get_local_host,
+        "manage_template" => "false"
+      )
       # register will try to load jars and raise if it cannot find jars
       expect {output.register}.to_not raise_error
     end
@@ -15,6 +19,7 @@ describe "outputs/elasticsearch_java" do
         require "logstash/outputs/elasticsearch_java"
         settings = {
           "protocol" => "transport",
+          "network_host" => get_local_host,
           "node_name" => "mynode"
         }
         next LogStash::Outputs::ElasticSearchJava.new(settings)
@@ -27,6 +32,7 @@ describe "outputs/elasticsearch_java" do
           :protocol => "transport",
           :client_settings => {
             "client.transport.sniff" => false,
+            "network.host" => get_local_host,
             "node.name" => "mynode"
           }
         })
@@ -40,6 +46,7 @@ describe "outputs/elasticsearch_java" do
         settings = {
           "hosts" => "node01",
           "protocol" => "transport",
+          "network_host" => get_local_host,
           "sniffing" => true
         }
         next LogStash::Outputs::ElasticSearchJava.new(settings)
@@ -61,6 +68,7 @@ describe "outputs/elasticsearch_java" do
         settings = {
           "hosts" => "node01",
           "protocol" => "transport",
+          "network_host" => get_local_host,
           "sniffing" => false
         }
         next LogStash::Outputs::ElasticSearchJava.new(settings)

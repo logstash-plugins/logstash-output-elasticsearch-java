@@ -12,7 +12,8 @@ describe "transport client create actions", :integration => true do
       "protocol" => "transport",
       "hosts" => get_host(),
       "port" => get_port('transport'),
-      "action" => action
+      "action" => action,
+      "network_host" => get_local_host
     }
     settings['document_id'] = id unless id.nil?
     LogStash::Outputs::ElasticSearchJava.new(settings)
