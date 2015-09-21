@@ -51,8 +51,8 @@ describe "(transport protocol) index events with fieldref in routing value", :in
           protocol => "transport"
           index => "#{index}"
           flush_size => #{flush_size}
-          routing => "%{message}",
-          network_host => #{get_local_host}
+          routing => "%{message}"
+          network_host => "#{get_local_host}"
         }
       }
       CONFIG
