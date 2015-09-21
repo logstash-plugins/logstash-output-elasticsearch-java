@@ -6,7 +6,7 @@ task :get_jars do
   jar_target = 'vendor/jar-dependencies/runtime-jars'
   url = "https://download.elasticsearch.org/elasticsearch/release/org/elasticsearch/distribution/tar/elasticsearch/#{version}/elasticsearch-#{version}.tar.gz"
 
-  puts "Will get jars for version #{2.0.0-beta2}"
+  puts "Will get jars for version #{version}"
   puts "Removing current jars"
   `rm -rf #{jar_target}`
   `mkdir -p #{jar_target}`
