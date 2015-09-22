@@ -80,12 +80,6 @@ class LogStash::Outputs::ElasticSearchJava < LogStash::Outputs::Base
   # For weekly indexes ISO 8601 format is recommended, eg. logstash-%{+xxxx.ww}
   config :index, :validate => :string, :default => "logstash-%{+YYYY.MM.dd}"
 
-  # The index type to write events to. Generally you should try to write only
-  # similar events to the same 'type'. String expansion `%{foo}` works here.
-  # 
-  # Deprecated in favor of `document_type` field.
-  config :index_type, :validate => :string, :deprecated => "Please use the 'document_type' setting instead. It has the same effect, but is more appropriately named."
-
   # The document type to write events to. Generally you should try to write only
   # similar events to the same 'type'. String expansion `%{foo}` works here.
   # Unless you set 'document_type', the event 'type' will be used if it exists 
@@ -183,10 +177,6 @@ class LogStash::Outputs::ElasticSearchJava < LogStash::Outputs::Base
 
   # This sets the local port to bind to. Equivalent to the Elasticsrearch option 'transport.tcp.port'
   config :transport_tcp_port, :validate => :number
-
-  # This setting no longer does anything. It exists to keep config validation
-  # from failing. It will be removed in future versions.
-  config :max_inflight_requests, :validate => :number, :default => 50, :deprecated => true
 
   # The node name Elasticsearch will use when joining a cluster.
   #
@@ -420,8 +410,6 @@ class LogStash::Outputs::ElasticSearchJava < LogStash::Outputs::Base
     # Set the 'type' value for the index.
     type = if @document_type
              event.sprintf(@document_type)
-           elsif @index_type # deprecated
-             event.sprintf(@index_type)
            else
              event["type"] || "logs"
            end
