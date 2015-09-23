@@ -308,41 +308,10 @@ class LogStash::Outputs::ElasticSearchJava < LogStash::Outputs::Base
       raise LogStash::ConfigurationError, "network_host MUST be set if the 'node' protocol is in use! If this is set incorrectly Logstash will hang attempting to connect!"
     end
 
-    client_settings = {}
-    client_settings["cluster.name"] = @cluster if @cluster
-    client_settings["network.host"] = @network_host if @network_host
-    client_settings["transport.tcp.port"] = @transport_tcp_port if @transport_tcp_port
-    client_settings["client.transport.sniff"] = @sniffing
-
-    if @node_name
-      client_settings["node.name"] = @node_name
-    else
-      client_settings["node.name"] = "logstash-#{Socket.gethostname}-#{$$}-#{object_id}"
-    end
-
-    @@plugins.each do |plugin|
-      name = plugin.name.split('-')[-1]
-      client_settings.merge!(LogStash::Outputs::ElasticSearchJava.const_get(name.capitalize).create_client_config(self))
-    end
-
     if (@hosts.nil? || @hosts.empty?) && @protocol != "node" # node can use zen discovery
       @logger.info("No 'hosts' set in elasticsearch output. Defaulting to localhost")
       @hosts = ["localhost"]
     end
-
-    common_options = {
-      :protocol => @protocol,
-      :client_settings => client_settings,
-      :hosts => @hosts,
-      :port => @port
-    }
-
-    # Update API setup
-    update_options = {
-      :upsert => @upsert,
-      :doc_as_upsert => @doc_as_upsert
-    }
-    common_options.merge! update_options if @action == 'update'
 
     client_class = case @protocol
       when "transport"
@@ -351,7 +320,7 @@ class LogStash::Outputs::ElasticSearchJava < LogStash::Outputs::Base
         LogStash::Outputs::ElasticSearchJavaPlugins::Protocols::NodeClient
     end
 
-    @client = client_class.new(common_options)
+    @client = client_class.new(client_options)
 
     if @manage_template
       begin
@@ -388,6 +357,41 @@ class LogStash::Outputs::ElasticSearchJava < LogStash::Outputs::Base
       end
     end
   end # def register
+
+  def client_options
+    client_settings = {}
+    client_settings["cluster.name"] = @cluster if @cluster
+    client_settings["network.host"] = @network_host if @network_host
+    client_settings["transport.tcp.port"] = @transport_tcp_port if @transport_tcp_port
+    client_settings["client.transport.sniff"] = @sniffing
+
+    if @node_name
+      client_settings["node.name"] = @node_name
+    else
+      client_settings["node.name"] = "logstash-#{Socket.gethostname}-#{$$}-#{object_id}"
+    end
+
+    @@plugins.each do |plugin|
+      name = plugin.name.split('-')[-1]
+      client_settings.merge!(LogStash::Outputs::ElasticSearchJava.const_get(name.capitalize).create_client_config(self))
+    end
+
+    common_options = {
+      :protocol => @protocol,
+      :client_settings => client_settings,
+      :hosts => @hosts,
+      :port => @port
+    }
+
+    # Update API setup
+    update_options = {
+      :upsert => @upsert,
+      :doc_as_upsert => @doc_as_upsert
+    }
+    common_options.merge! update_options if @action == 'update'
+
+    common_options
+  end
 
 
   public
