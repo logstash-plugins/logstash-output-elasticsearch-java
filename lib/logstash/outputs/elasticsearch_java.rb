@@ -481,11 +481,7 @@ class LogStash::Outputs::ElasticSearchJava < LogStash::Outputs::Base
   end # def flush
 
   public
-  def teardown
-    if @cacert # remove temporary jks store created from the cacert
-      File.delete(@truststore)
-    end
-
+  def close
     @retry_teardown_requested.make_true
     # First, make sure retry_timer_thread is stopped
     # to ensure we do not signal a retry based on 
