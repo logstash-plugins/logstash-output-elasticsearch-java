@@ -29,6 +29,12 @@ describe "transport client create actions", :integration => true do
   end
 
   context "when action => create" do
+    it "should instantiate a transport, not node, client" do
+      subject = get_es_output("create", "id123")
+      subject.register
+      expect(subject.client.send(:client).class).to eql(Java::OrgElasticsearchClientTransport::TransportClient)
+    end
+
     it "should create new documents with or without id" do
       subject = get_es_output("create", "id123")
       subject.register
