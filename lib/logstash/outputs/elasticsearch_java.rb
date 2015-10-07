@@ -410,7 +410,7 @@ class LogStash::Outputs::ElasticSearchJava < LogStash::Outputs::Base
 
   public
   def receive(event)
-    return unless output?(event)
+    
 
     # block until we have not maxed out our 
     # retry queue. This is applying back-pressure
