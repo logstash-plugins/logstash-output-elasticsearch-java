@@ -12,7 +12,6 @@ describe "all protocols update actions", :integration => true do
       "protocol" => protocol,
       "hosts" => get_host(),
       "port" => get_port(protocol),
-      "network_host" => get_local_host,
       "action" => "update"
     }
     settings['upsert'] = upsert unless upsert.nil?

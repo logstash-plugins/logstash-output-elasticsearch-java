@@ -73,9 +73,9 @@ RSpec.configure do |config|
         # do nothing
       end
     end
+  end
 
-    config.after(:each) do
-      LogStash::Outputs::ElasticSearchJavaPlugins::Protocols::NodeClient.clear_client()
-    end
+  config.after(:each) do
+    LogStash::Outputs::ElasticSearchJavaPlugins::Protocols::NodeClient.clear_client()
   end
 end

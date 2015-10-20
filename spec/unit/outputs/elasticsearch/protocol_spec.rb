@@ -20,12 +20,13 @@ describe LogStash::Outputs::ElasticSearchJavaPlugins::Protocols::NodeClient do
   context "contains failures" do
     it "should map correctly" do
       failure = org.elasticsearch.action.bulk.BulkItemResponse::Failure.new("my_index", "my_type", "my_id", java.lang.IllegalArgumentException.new("bad_request"))
+      failure_code = failure.get_status.status
       bulk_item_response_index = org.elasticsearch.action.bulk.BulkItemResponse.new(32, "index", failure)
       bulk_item_response_update = org.elasticsearch.action.bulk.BulkItemResponse.new(32, "update", failure)
       bulk_item_response_delete = org.elasticsearch.action.bulk.BulkItemResponse.new(32, "delete", failure)
       bulk_response = org.elasticsearch.action.bulk.BulkResponse.new([bulk_item_response_index, bulk_item_response_update, bulk_item_response_delete], 0)
       actual = LogStash::Outputs::ElasticSearchJavaPlugins::Protocols::NodeClient.normalize_bulk_response(bulk_response)
-      insist { actual } == {"errors" => true, "statuses" => [400, 400, 400]}
+      insist { actual } == {"errors" => true, "statuses" => [failure_code, failure_code, failure_code]}
     end
   end
 end

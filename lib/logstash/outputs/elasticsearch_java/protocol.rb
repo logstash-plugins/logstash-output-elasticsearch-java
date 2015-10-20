@@ -56,7 +56,7 @@ module LogStash
 
           def self.clear_client()
             CLIENT_MUTEX.synchronize {
-              @client = null
+              @client = nil
             }
           end
 
@@ -82,7 +82,7 @@ module LogStash
           end
 
           def setup(options={})
-            @settings = org.elasticsearch.common.settings.Settings.settingsBuilder()
+            @settings = org.elasticsearch.common.settings.ImmutableSettings.settingsBuilder
             if options[:hosts]
               @settings.put("discovery.zen.ping.multicast.enabled", false)
               @settings.put("discovery.zen.ping.unicast.hosts", NodeClient.hosts(options))
@@ -90,7 +90,6 @@ module LogStash
 
             @settings.put("node.client", true)
             @settings.put("http.enabled", false)
-            @settings.put("path.home", Dir.pwd)
 
             if options[:client_settings]
               options[:client_settings].each do |key, value|
@@ -208,23 +207,18 @@ module LogStash
           end # def build_request
 
           def template_exists?(name)
-            return !client.admin.indices.
-              prepareGetTemplates(name).
-              execute().
-              actionGet().
-              getIndexTemplates().
-              isEmpty
-          end # def template_exists?
+            request = org.elasticsearch.action.admin.indices.template.get.GetIndexTemplatesRequestBuilder.new(client.admin.indices, name)
+            response = request.get
+            return !response.getIndexTemplates.isEmpty
+          end
 
           def template_put(name, template)
-            response = client.admin.indices.
-              preparePutTemplate(name).
-              setSource(LogStash::Json.dump(template)).
-              execute().
-              actionGet()
+            request = org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateRequestBuilder.new(client.admin.indices, name)
+            request.setSource(LogStash::Json.dump(template))
 
-            raise "Could not index template!" unless response.isAcknowledged
-          end # template_put
+            # execute the request and get the response, if it fails, we'll get an exception.
+            request.get
+          end
 
           public(:initialize, :bulk)
         end # class NodeClient
@@ -239,10 +233,7 @@ module LogStash
 
           private
           def build_client(options)
-            client = org.elasticsearch.client.transport.TransportClient.
-              builder().
-              settings((settings.build)).
-              build()
+            client = org.elasticsearch.client.transport.TransportClient.new(settings.build)
 
             options[:hosts].each do |host|
               matches = host.match /(.+)(?:.*)/
