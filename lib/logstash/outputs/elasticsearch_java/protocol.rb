@@ -14,12 +14,6 @@ module LogStash
             @logger = Cabin::Channel.get
           end
 
-          def client
-            return @client if @client
-            @client = build_client(@options)
-            return @client
-          end
-
           def template_install(name, template, force=false)
             if template_exists?(name) && !force
               @logger.debug("Found existing Elasticsearch template. Skipping template management", :name => name)
@@ -230,12 +224,16 @@ module LogStash
         end # class NodeClient
 
         class TransportClient < NodeClient
+          def client
+            return @client if @client
+            @client = build_client(@options)
+            return @client
+          end
+
+
           private
           def build_client(options)
-            client = org.elasticsearch.client.transport.TransportClient.
-              builder().
-              settings((settings.build)).
-              build()
+            client = org.elasticsearch.client.transport.TransportClient.new(settings.build)
 
             options[:hosts].each do |host|
               matches = host.match /(.+)(?:.*)/

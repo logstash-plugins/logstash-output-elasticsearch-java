@@ -303,41 +303,10 @@ class LogStash::Outputs::ElasticSearchJava < LogStash::Outputs::Base
     @retry_queue_not_full = ConditionVariable.new
     @retry_queue = Queue.new
 
-    client_settings = {}
-    client_settings["cluster.name"] = @cluster if @cluster
-    client_settings["network.host"] = @network_host if @network_host
-    client_settings["transport.tcp.port"] = @transport_tcp_port if @transport_tcp_port
-    client_settings["client.transport.sniff"] = @sniffing
-
-    if @node_name
-      client_settings["node.name"] = @node_name
-    else
-      client_settings["node.name"] = "logstash-#{Socket.gethostname}-#{$$}-#{object_id}"
-    end
-
-    @@plugins.each do |plugin|
-      name = plugin.name.split('-')[-1]
-      client_settings.merge!(LogStash::Outputs::ElasticSearchJava.const_get(name.capitalize).create_client_config(self))
-    end
-
     if (@hosts.nil? || @hosts.empty?) && @protocol != "node" # node can use zen discovery
       @logger.info("No 'hosts' set in elasticsearch output. Defaulting to localhost")
       @hosts = ["localhost"]
     end
-
-    common_options = {
-      :protocol => @protocol,
-      :client_settings => client_settings,
-      :hosts => @hosts,
-      :port => @port
-    }
-
-    # Update API setup
-    update_options = {
-      :upsert => @upsert,
-      :doc_as_upsert => @doc_as_upsert
-    }
-    common_options.merge! update_options if @action == 'update'
 
     client_class = case @protocol
       when "transport"
@@ -346,7 +315,7 @@ class LogStash::Outputs::ElasticSearchJava < LogStash::Outputs::Base
         LogStash::Outputs::ElasticSearchJavaPlugins::Protocols::NodeClient
     end
 
-    @client = client_class.new(common_options)
+    @client = client_class.new(client_options)
 
     if @manage_template
       begin
@@ -385,6 +354,41 @@ class LogStash::Outputs::ElasticSearchJava < LogStash::Outputs::Base
     end
   end # def register
 
+  def client_options
+    client_settings = {}
+    client_settings["cluster.name"] = @cluster if @cluster
+    client_settings["network.host"] = @network_host if @network_host
+    client_settings["transport.tcp.port"] = @transport_tcp_port if @transport_tcp_port
+    client_settings["client.transport.sniff"] = @sniffing
+
+    if @node_name
+      client_settings["node.name"] = @node_name
+    else
+      client_settings["node.name"] = "logstash-#{Socket.gethostname}-#{$$}-#{object_id}"
+    end
+
+    @@plugins.each do |plugin|
+      name = plugin.name.split('-')[-1]
+      client_settings.merge!(LogStash::Outputs::ElasticSearchJava.const_get(name.capitalize).create_client_config(self))
+    end
+
+    common_options = {
+      :protocol => @protocol,
+      :client_settings => client_settings,
+      :hosts => @hosts,
+      :port => @port
+    }
+
+    # Update API setup
+    update_options = {
+      :upsert => @upsert,
+      :doc_as_upsert => @doc_as_upsert
+    }
+    common_options.merge! update_options if @action == 'update'
+
+    common_options
+  end
+
 
   public
   def get_template
@@ -402,7 +406,7 @@ class LogStash::Outputs::ElasticSearchJava < LogStash::Outputs::Base
 
   public
   def receive(event)
-    return unless output?(event)
+    
 
     # block until we have not maxed out our 
     # retry queue. This is applying back-pressure
@@ -473,11 +477,7 @@ class LogStash::Outputs::ElasticSearchJava < LogStash::Outputs::Base
   end # def flush
 
   public
-  def teardown
-    if @cacert # remove temporary jks store created from the cacert
-      File.delete(@truststore)
-    end
-
+  def close
     @retry_teardown_requested.make_true
     # First, make sure retry_timer_thread is stopped
     # to ensure we do not signal a retry based on 

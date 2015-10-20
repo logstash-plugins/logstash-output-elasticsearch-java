@@ -12,7 +12,8 @@ describe "transport client create actions", :integration => true do
       "protocol" => "transport",
       "hosts" => get_host(),
       "port" => get_port('transport'),
-      "action" => action
+      "action" => action,
+      "network_host" => get_local_host
     }
     settings['document_id'] = id unless id.nil?
     LogStash::Outputs::ElasticSearchJava.new(settings)
@@ -28,6 +29,12 @@ describe "transport client create actions", :integration => true do
   end
 
   context "when action => create" do
+    it "should instantiate a transport, not node, client" do
+      subject = get_es_output("create", "id123")
+      subject.register
+      expect(subject.client.send(:client).class).to eql(Java::OrgElasticsearchClientTransport::TransportClient)
+    end
+
     it "should create new documents with or without id" do
       subject = get_es_output("create", "id123")
       subject.register

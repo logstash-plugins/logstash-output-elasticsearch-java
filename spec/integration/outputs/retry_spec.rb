@@ -21,6 +21,7 @@ describe "failures in bulk class expected behavior", :integration => true do
       "manage_template" => true,
       "index" => "logstash-2014.11.17",
       "template_overwrite" => true,
+      "network_host" => get_local_host,
       "protocol" => 'transport',
       "hosts" => get_host(),
       "port" => get_port('transport'),
@@ -60,7 +61,7 @@ describe "failures in bulk class expected behavior", :integration => true do
     end
     subject.register
     subject.receive(event1)
-    subject.teardown
+    subject.close
   end
 
   it "should retry actions with response status of 503" do
@@ -108,7 +109,7 @@ describe "failures in bulk class expected behavior", :integration => true do
     subject.register
     subject.receive(invalid_event)
     expect(subject).not_to receive(:retry_push)
-    subject.teardown
+    subject.close
 
     @es.indices.refresh
     sleep(5)
@@ -122,7 +123,7 @@ describe "failures in bulk class expected behavior", :integration => true do
     subject.register
     subject.receive(event1)
     expect(subject).not_to receive(:retry_push)
-    subject.teardown
+    subject.close
 
     @es.indices.refresh
     sleep(5)
@@ -136,7 +137,7 @@ describe "failures in bulk class expected behavior", :integration => true do
     subject.register
     subject.receive(invalid_event)
     subject.receive(event1)
-    subject.teardown
+    subject.close
     @es.indices.refresh
     sleep(5)
 
