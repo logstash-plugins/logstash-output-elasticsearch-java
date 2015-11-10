@@ -69,6 +69,7 @@ class LogStash::Outputs::ElasticSearchJava < LogStash::Outputs::Base
   attr_reader :client
 
   include LogStash::Outputs::ElasticSearch::CommonConfigs
+  include LogStash::Outputs::ElasticSearch::Common
 
   include Stud::Buffer
   RETRYABLE_CODES = [409, 429, 503]
@@ -125,73 +126,7 @@ class LogStash::Outputs::ElasticSearchJava < LogStash::Outputs::Base
   # will bind to this ip. This ip MUST be reachable by all nodes in the Elasticsearch cluster
   config :network_host, :validate => :string, :required => true
 
-  public
-  def register
-    @submit_mutex = Mutex.new
-    # retry-specific variables
-    @retry_flush_mutex = Mutex.new
-    @retry_teardown_requested = Concurrent::AtomicBoolean.new(false)
-    # needs flushing when interval
-    @retry_queue_needs_flushing = ConditionVariable.new
-    @retry_queue_not_full = ConditionVariable.new
-    @retry_queue = Queue.new
-
-
-    if @protocol =='node' && !@network_host
-      raise LogStash::ConfigurationError, "network_host MUST be set if the 'node' protocol is in use! If this is set incorrectly Logstash will hang attempting to connect!"
-    end
-
-    if (@hosts.nil? || @hosts.empty?) && @protocol != "node" # node can use zen discovery
-      @logger.info("No 'hosts' set in elasticsearch output. Defaulting to localhost")
-      @hosts = ["localhost"]
-    end
-
-    client_class = case @protocol
-      when "transport"
-        LogStash::Outputs::ElasticSearchJavaPlugins::Protocols::TransportClient
-      when "node"
-        LogStash::Outputs::ElasticSearchJavaPlugins::Protocols::NodeClient
-    end
-
-    @client = client_class.new(client_options)
-
-    if @manage_template
-      begin
-        @logger.info("Automatic template management enabled", :manage_template => @manage_template.to_s)
-        client.template_install(@template_name, get_template, @template_overwrite)
-      rescue => e
-        @logger.error("Failed to install template",
-                      :message => e.message,
-                      :error_class => e.class.name,
-                      )
-      end
-    end
-
-    @logger.info("New Elasticsearch output", :cluster => @cluster,
-                 :hosts => @host, :protocol => @protocol)
-
-    buffer_initialize(
-      :max_items => @flush_size,
-      :max_interval => @idle_flush_time,
-      :logger => @logger
-    )
-
-    @retry_timer_thread = Thread.new do
-      loop do
-        sleep(@retry_max_interval)
-        @retry_flush_mutex.synchronize { @retry_queue_needs_flushing.signal }
-      end
-    end
-
-    @retry_thread = Thread.new do
-      while @retry_teardown_requested.false?
-        @retry_flush_mutex.synchronize { @retry_queue_needs_flushing.wait(@retry_flush_mutex) }
-        retry_flush
-      end
-    end
-  end # def register
-
-  def client_options
+  def build_client
     client_settings = {}
     client_settings["cluster.name"] = @cluster if @cluster
     client_settings["network.host"] = @network_host if @network_host
@@ -204,12 +139,7 @@ class LogStash::Outputs::ElasticSearchJava < LogStash::Outputs::Base
       client_settings["node.name"] = "logstash-#{Socket.gethostname}-#{$$}-#{object_id}"
     end
 
-    @@plugins.each do |plugin|
-      name = plugin.name.split('-')[-1]
-      client_settings.merge!(LogStash::Outputs::ElasticSearchJava.const_get(name.capitalize).create_client_config(self))
-    end
-
-    common_options = {
+    options = {
       :protocol => @protocol,
       :client_settings => client_settings,
       :hosts => @hosts
@@ -220,155 +150,27 @@ class LogStash::Outputs::ElasticSearchJava < LogStash::Outputs::Base
       :upsert => @upsert,
       :doc_as_upsert => @doc_as_upsert
     }
-    common_options.merge! update_options if @action == 'update'
+    options.merge! update_options if @action == 'update'
 
-    common_options
+    options
+
+    @client = client_class.new(options)
   end
 
-
-  public
-  def get_template
-    if @template.nil?
-      @template = ::File.expand_path('elasticsearch_java/elasticsearch-template.json', ::File.dirname(__FILE__))
-      if !File.exists?(@template)
-        raise "You must specify 'template => ...' in your elasticsearch output (I looked for '#{@template}')"
-      end
-    end
-    template_json = IO.read(@template).gsub(/\n/,'')
-    template = LogStash::Json.load(template_json)
-    @logger.info("Using mapping template", :template => template)
-    return template
-  end # def get_template
-
-  public
-  def receive(event)
-    
-
-    # block until we have not maxed out our 
-    # retry queue. This is applying back-pressure
-    # to slow down the receive-rate
-    @retry_flush_mutex.synchronize {
-      @retry_queue_not_full.wait(@retry_flush_mutex) while @retry_queue.size > @retry_max_items
-    }
-
-    event['@metadata']['retry_count'] = 0
-
-    # Set the 'type' value for the index.
-    type = if @document_type
-             event.sprintf(@document_type)
-           elsif @index_type # deprecated
-             event.sprintf(@index_type)
-           else
-             event["type"] || "logs"
-           end
-
-    params = {
-      :_id => @document_id ? event.sprintf(@document_id) : nil,
-      :_index => event.sprintf(@index),
-      :_type => type,
-      :_routing => @routing ? event.sprintf(@routing) : nil
-    }
-    
-    params[:_upsert] = LogStash::Json.load(event.sprintf(@upsert)) if @action == 'update' && @upsert != ""
-
-    buffer_receive([event.sprintf(@action), params, event])
-  end # def receive
-
-  public
-  # The submit method can be called from both the
-  # Stud::Buffer flush thread and from our own retry thread.
-  def submit(actions)
-    es_actions = actions.map { |a, doc, event| [a, doc, event.to_hash] }
-    @submit_mutex.lock
-    begin
-      bulk_response = @client.bulk(es_actions)
-    ensure
-      @submit_mutex.unlock
-    end
-    if bulk_response["errors"]
-      actions_with_responses = actions.zip(bulk_response['statuses'])
-      actions_to_retry = []
-      actions_with_responses.each do |action, resp_code|
-        if RETRYABLE_CODES.include?(resp_code)
-          @logger.warn "retrying failed action with response code: #{resp_code}"
-          actions_to_retry << action
-        elsif not SUCCESS_CODES.include?(resp_code)
-          @logger.warn "failed action with response of #{resp_code}, dropping action: #{action}"
-        end
-      end
-      retry_push(actions_to_retry) unless actions_to_retry.empty?
+  def get_plugin_options
+    @@plugins.each do |plugin|
+      name = plugin.name.split('-')[-1]
+      client_settings.merge!(LogStash::Outputs::ElasticSearchJava.const_get(name.capitalize).create_client_config(self))
     end
   end
 
-  # When there are exceptions raised upon submission, we raise an exception so that
-  # Stud::Buffer will retry to flush
-  public
-  def flush(actions, teardown = false)
-    begin
-      submit(actions)
-    rescue => e
-      @logger.error "Got error to send bulk of actions: #{e.message}"
-      raise e
+  def client_class
+    case @protocol
+      when "transport"
+        LogStash::Outputs::ElasticSearchJavaPlugins::Protocols::TransportClient
+      when "node"
+        LogStash::Outputs::ElasticSearchJavaPlugins::Protocols::NodeClient
     end
-  end # def flush
-
-  public
-  def close
-    @retry_teardown_requested.make_true
-    # First, make sure retry_timer_thread is stopped
-    # to ensure we do not signal a retry based on 
-    # the retry interval.
-    Thread.kill(@retry_timer_thread)
-    @retry_timer_thread.join
-    # Signal flushing in the case that #retry_flush is in 
-    # the process of waiting for a signal.
-    @retry_flush_mutex.synchronize { @retry_queue_needs_flushing.signal }
-    # Now, #retry_flush is ensured to not be in a state of 
-    # waiting and can be safely joined into the main thread
-    # for further final execution of an in-process remaining call.
-    @retry_thread.join
-
-    # execute any final actions along with a proceeding retry for any 
-    # final actions that did not succeed.
-    buffer_flush(:final => true)
-    retry_flush
-  end
-
-  private
-  # in charge of submitting any actions in @retry_queue that need to be 
-  # retried
-  #
-  # This method is not called concurrently. It is only called by @retry_thread
-  # and once that thread is ended during the teardown process, a final call 
-  # to this method is done upon teardown in the main thread.
-  def retry_flush()
-    unless @retry_queue.empty?
-      buffer = @retry_queue.size.times.map do
-        next_action, next_doc, next_event = @retry_queue.pop
-        next_event['@metadata']['retry_count'] += 1
-
-        if next_event['@metadata']['retry_count'] > @max_retries
-          @logger.error "too many attempts at sending event. dropping: #{next_event}"
-          nil
-        else
-          [next_action, next_doc, next_event]
-        end
-      end.compact
-
-      submit(buffer) unless buffer.empty?
-    end
-
-    @retry_flush_mutex.synchronize {
-      @retry_queue_not_full.signal if @retry_queue.size < @retry_max_items
-    }
-  end
-
-  private
-  def retry_push(actions)
-    Array(actions).each{|action| @retry_queue << action}
-    @retry_flush_mutex.synchronize {
-      @retry_queue_needs_flushing.signal if @retry_queue.size >= @retry_max_items
-    }
   end
 
   @@plugins = Gem::Specification.find_all{|spec| spec.name =~ /logstash-output-elasticsearch_java-/ }
