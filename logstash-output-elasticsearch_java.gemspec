@@ -24,6 +24,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'stud', ['>= 0.0.17', '~> 0.0']
   s.add_runtime_dependency 'cabin', ['~> 0.6']
   s.add_runtime_dependency "logstash-core", ">= 2.0.0.beta2", "< 3.0.0"
+  s.add_runtime_dependency "logstash-output-elasticsearch"
 
   s.add_development_dependency 'ftw', '~> 0.0.42'
   s.add_development_dependency 'logstash-input-generator'
