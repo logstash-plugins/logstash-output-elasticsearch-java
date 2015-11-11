@@ -25,7 +25,8 @@ describe LogStash::Outputs::ElasticSearchJavaPlugins::Protocols::NodeClient do
       bulk_item_response_delete = org.elasticsearch.action.bulk.BulkItemResponse.new(32, "delete", failure)
       bulk_response = org.elasticsearch.action.bulk.BulkResponse.new([bulk_item_response_index, bulk_item_response_update, bulk_item_response_delete], 0)
       actual = LogStash::Outputs::ElasticSearchJavaPlugins::Protocols::NodeClient.normalize_bulk_response(bulk_response)
-      insist { actual } == {"errors" => true, "statuses" => [400, 400, 400]}
+      expect(actual["errors"]).to eql(true)
+      expect(actual["items"].map {|i| i.first[1]["status"]}).to eql([400,400,400])
     end
   end
 end

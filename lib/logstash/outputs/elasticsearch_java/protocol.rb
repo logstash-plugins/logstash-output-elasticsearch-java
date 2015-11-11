@@ -138,11 +138,18 @@ module LogStash
             result.flatten.join(",")
           end
 
+          # Normalizes the Java response to a reasonable approximation of the HTTP datastructure for interop
+          # with the HTTP code
           def self.normalize_bulk_response(bulk_response)
-            # TODO(talevy): parse item response objects to retrieve correct 200 (OK) or 201(created) status codes
+            items = bulk_response.map {|i|
+              if i.is_failed
+                [[i.get_op_type,  {"status" => i.get_failure.get_status.get_status, "message" => i.failureMessage}]]
+              else
+                [[i.get_op_type, {"status" => 200, "message" => "OK"}]]
+              end
+            }
             if bulk_response.has_failures()
-              {"errors" => true,
-               "statuses" => bulk_response.map { |i| (i.is_failed && i.get_failure.get_status.get_status) || 200 }}
+              {"errors" => true, "items" => items}
             else
               {"errors" => false}
             end

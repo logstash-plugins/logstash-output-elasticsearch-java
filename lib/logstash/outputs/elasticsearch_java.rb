@@ -4,7 +4,6 @@ require "logstash/environment"
 require "logstash/outputs/base"
 require "logstash/json"
 require "concurrent"
-require "stud/buffer"
 require "socket" # for Socket.gethostname
 require "thread" # for safe queueing
 require "uri" # for escaping user input
@@ -71,11 +70,22 @@ class LogStash::Outputs::ElasticSearchJava < LogStash::Outputs::Base
   include LogStash::Outputs::ElasticSearch::CommonConfigs
   include LogStash::Outputs::ElasticSearch::Common
 
-  include Stud::Buffer
   RETRYABLE_CODES = [409, 429, 503]
   SUCCESS_CODES = [200, 201]
 
   config_name "elasticsearch_java"
+
+  # The Elasticsearch action to perform. Valid actions are:
+  #
+  # - index: indexes a document (an event from Logstash).
+  # - delete: deletes a document by id (An id is required for this action)
+  # - create: indexes a document, fails if a document by that id already exists in the index.
+  # - update: updates a document by id. Update has a special case where you can upsert -- update a
+  #   document if not already present. See the `upsert` option
+  # - create_unless_exists: create the document unless it already exists, in which case do nothing.
+  #
+  # For more details on actions, check out the http://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html[Elasticsearch bulk API documentation]
+  config :action, :validate => %w(index delete create update create_unless_exists), :default => "index"
 
   # The name of your cluster if you set it on the Elasticsearch side. Useful
   # for discovery when using `node` or `transport` protocols.
@@ -155,6 +165,11 @@ class LogStash::Outputs::ElasticSearchJava < LogStash::Outputs::Base
     options
 
     @client = client_class.new(options)
+  end
+
+  def close
+    @stopping.make_true
+    @buffer.stop
   end
 
   def get_plugin_options
