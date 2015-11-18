@@ -539,10 +539,10 @@ class LogStash::Outputs::ElasticSearchJava < LogStash::Outputs::Base
     }
   end
 
-  @@plugins = Gem::Specification.find_all{|spec| spec.name =~ /logstash-output-elasticsearch_java-/ }
+  @@plugins = Gem::Specification.find_all{|spec| spec.name =~ /logstash-output-elasticsearch_java_/ }
 
   @@plugins.each do |plugin|
-    name = plugin.name.split('-')[-1]
+    name = plugin.name.split('_')[-1]
     require "logstash/outputs/elasticsearch_java/#{name}"
   end
 
