@@ -372,7 +372,7 @@ class LogStash::Outputs::ElasticSearchJava < LogStash::Outputs::Base
     end
 
     @@plugins.each do |plugin|
-      name = plugin.name.split('-')[-1]
+      name = plugin.name.split('_')[-1]
       client_settings.merge!(LogStash::Outputs::ElasticSearchJava.const_get(name.capitalize).create_client_config(self))
     end
 
