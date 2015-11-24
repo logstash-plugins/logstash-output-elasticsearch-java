@@ -52,7 +52,6 @@ describe "transport client create actions", :integration => true do
       subject.register
       subject.receive(LogStash::Event.new("message" => "sample message here"))
       subject.flush
-      require 'pry'; binding.pry
       @es.indices.refresh
       # Wait or fail until everything's indexed.
       Stud::try(3.times) do

@@ -3,6 +3,8 @@ require "logstash/outputs/elasticsearch_java/protocol"
 require "java"
 
 describe LogStash::Outputs::ElasticSearchJavaPlugins::Protocols::NodeClient do
+  subject { LogStash::Outputs::ElasticSearchJavaPlugins::Protocols::NodeClient.new() }
+
   context "successful" do
     it "should map correctly" do
       index_response = org.elasticsearch.action.index.IndexResponse.new("my_index", "my_type", "my_id", 123, true)
@@ -12,7 +14,7 @@ describe LogStash::Outputs::ElasticSearchJavaPlugins::Protocols::NodeClient do
       bulk_item_response_update = org.elasticsearch.action.bulk.BulkItemResponse.new(32, "update", update_response)
       bulk_item_response_delete = org.elasticsearch.action.bulk.BulkItemResponse.new(32, "delete", delete_response)
       bulk_response = org.elasticsearch.action.bulk.BulkResponse.new([bulk_item_response_index, bulk_item_response_update, bulk_item_response_delete], 0)
-      ret = LogStash::Outputs::ElasticSearchJavaPlugins::Protocols::NodeClient.normalize_bulk_response(bulk_response)
+      ret = subject.normalize_bulk_response(bulk_response)
       insist { ret } == {"errors" => false}
     end
   end
@@ -24,7 +26,7 @@ describe LogStash::Outputs::ElasticSearchJavaPlugins::Protocols::NodeClient do
       bulk_item_response_update = org.elasticsearch.action.bulk.BulkItemResponse.new(32, "update", failure)
       bulk_item_response_delete = org.elasticsearch.action.bulk.BulkItemResponse.new(32, "delete", failure)
       bulk_response = org.elasticsearch.action.bulk.BulkResponse.new([bulk_item_response_index, bulk_item_response_update, bulk_item_response_delete], 0)
-      actual = LogStash::Outputs::ElasticSearchJavaPlugins::Protocols::NodeClient.normalize_bulk_response(bulk_response)
+      actual = subject.normalize_bulk_response(bulk_response)
       expect(actual["errors"]).to eql(true)
       expect(actual["items"].map {|i| i.first[1]["status"]}).to eql([400,400,400])
     end
