@@ -26,7 +26,7 @@ describe "send messages to ElasticSearch using HTTPS", :elasticsearch_secure => 
   it "sends events to ES" do
     expect {
       subject.receive(LogStash::Event.new("message" => "sample message here"))
-      subject.buffer_flush(:final => true)
+      subject.flush
     }.to_not raise_error
   end
 end
@@ -51,7 +51,7 @@ describe "connect using HTTP Authentication", :elasticsearch_secure => true do
   it "sends events to ES" do
     expect {
       subject.receive(LogStash::Event.new("message" => "sample message here"))
-      subject.buffer_flush(:final => true)
+      subject.flush
     }.to_not raise_error
   end
 end
@@ -82,7 +82,7 @@ describe "send messages to ElasticSearch using HTTPS", :elasticsearch_secure => 
   it "sends events to ES" do
     expect {
       subject.receive(LogStash::Event.new("message" => "sample message here"))
-      subject.buffer_flush(:final => true)
+      subject.flush
     }.to_not raise_error
   end
 end
@@ -107,7 +107,7 @@ describe "connect using HTTP Authentication", :elasticsearch_secure => true do
   it "sends events to ES" do
     expect {
       subject.receive(LogStash::Event.new("message" => "sample message here"))
-      subject.buffer_flush(:final => true)
+      subject.flush
     }.to_not raise_error
   end
 end

@@ -10,8 +10,7 @@ describe "index template expected behavior", :integration => true do
           "manage_template" => true,
           "template_overwrite" => true,
           "protocol" => protocol,
-          "hosts" => "#{get_host()}",
-          "port" => "#{get_port('transport')}",
+          "hosts" => "#{get_host()}:#{get_port('transport')}",
           "network_host" => get_local_host
         }
         next LogStash::Outputs::ElasticSearchJava.new(settings)
@@ -30,14 +29,17 @@ describe "index template expected behavior", :integration => true do
 
         subject.register
 
-        subject.receive(LogStash::Event.new("message" => "sample message here"))
-        subject.receive(LogStash::Event.new("somevalue" => 100))
-        subject.receive(LogStash::Event.new("somevalue" => 10))
-        subject.receive(LogStash::Event.new("somevalue" => 1))
-        subject.receive(LogStash::Event.new("country" => "us"))
-        subject.receive(LogStash::Event.new("country" => "at"))
-        subject.receive(LogStash::Event.new("geoip" => { "location" => [ 0.0, 0.0 ] }))
-        subject.buffer_flush(:final => true)
+        events = [
+          LogStash::Event.new("message" => "sample message here"),
+          LogStash::Event.new("somevalue" => 100),
+          LogStash::Event.new("somevalue" => 10),
+          LogStash::Event.new("somevalue" => 1),
+          LogStash::Event.new("country" => "us"),
+          LogStash::Event.new("country" => "at"),
+          LogStash::Event.new("geoip" => { "location" => [ 0.0, 0.0 ] })
+        ]
+        subject.multi_receive(events)
+
         @es.indices.refresh
 
         # Wait or fail until everything's indexed.
@@ -85,7 +87,7 @@ describe "index template expected behavior", :integration => true do
       end
 
       it "should index stopwords like 'at' " do
-        results = @es.search(:body => { "aggregations" => { "my_agg" => { "terms" => { "field" => "country" } } } })["aggregations"]["my_agg"]
+        results = @es.search(:body => { "aggregations" => { "my_agg" => { "terms" => { "field" => "country.raw" } } } })["aggregations"]["my_agg"]
         terms = results["buckets"].collect { |b| b["key"] }
 
         insist { terms }.include?("us")

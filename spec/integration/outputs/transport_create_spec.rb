@@ -10,8 +10,7 @@ describe "transport client create actions", :integration => true do
       "index" => "logstash-create",
       "template_overwrite" => true,
       "protocol" => "transport",
-      "hosts" => get_host(),
-      "port" => get_port('transport'),
+      "hosts" => "#{get_host()}:#{get_port('transport')}",
       "action" => action,
       "network_host" => get_local_host
     }
@@ -39,7 +38,7 @@ describe "transport client create actions", :integration => true do
       subject = get_es_output("create", "id123")
       subject.register
       subject.receive(LogStash::Event.new("message" => "sample message here"))
-      subject.buffer_flush(:final => true)
+      subject.flush
       @es.indices.refresh
       # Wait or fail until everything's indexed.
       Stud::try(3.times) do
@@ -52,7 +51,7 @@ describe "transport client create actions", :integration => true do
       subject = get_es_output("create")
       subject.register
       subject.receive(LogStash::Event.new("message" => "sample message here"))
-      subject.buffer_flush(:final => true)
+      subject.flush
       @es.indices.refresh
       # Wait or fail until everything's indexed.
       Stud::try(3.times) do
@@ -67,7 +66,7 @@ describe "transport client create actions", :integration => true do
       subject = get_es_output("create_unless_exists", "id123")
       subject.register
       subject.receive(LogStash::Event.new("message" => "sample message here"))
-      subject.buffer_flush(:final => true)
+      subject.flush
       @es.indices.refresh
       # Wait or fail until everything's indexed.
       Stud::try(3.times) do
@@ -89,7 +88,7 @@ describe "transport client create actions", :integration => true do
       subject.register
       subject.receive(LogStash::Event.new("message" => "sample message here"))
       subject.receive(LogStash::Event.new("message" => "sample message here")) # 400 status failure (same id)
-      subject.buffer_flush(:final => true)
+      subject.flush
       @es.indices.refresh
       # Wait or fail until everything's indexed.
       Stud::try(3.times) do

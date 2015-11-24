@@ -12,9 +12,19 @@ describe "failures in bulk class expected behavior", :integration => true do
   let(:max_retries) { 3 }
 
   def mock_actions_with_response(*resp)
-    allow_any_instance_of(LogStash::Outputs::ElasticSearchJavaPlugins::Protocols::NodeClient).to receive(:bulk).and_return(*resp)
-  end
+    expanded_responses = resp.map do |resp|
+      items = resp["statuses"] && resp["statuses"].map do |status|
+        {"create" => {"status" => status, "error" => "Error for #{status}"}}
+      end
 
+      {
+        "errors" => resp["errors"],
+        "items" => items
+      }
+    end
+
+    allow_any_instance_of(LogStash::Outputs::ElasticSearchJavaPlugins::Protocols::NodeClient).to receive(:bulk).and_return(*expanded_responses)
+  end
 
   subject! do
     settings = {
@@ -23,8 +33,7 @@ describe "failures in bulk class expected behavior", :integration => true do
       "template_overwrite" => true,
       "network_host" => get_local_host,
       "protocol" => 'transport',
-      "hosts" => get_host(),
-      "port" => get_port('transport'),
+      "hosts" => "#{get_host()}:#{get_port('transport')}",
       "retry_max_items" => 10,
       "retry_max_interval" => 1,
       "max_retries" => max_retries
@@ -46,22 +55,24 @@ describe "failures in bulk class expected behavior", :integration => true do
     subject.register
     subject.receive(event1)
     subject.receive(event2)
-    subject.buffer_flush(:final => true)
+    subject.flush
     sleep(2)
   end
 
-  it "should raise exception and be retried by stud::buffer" do
+  it "retry exceptions within the submit body" do
     call_count = 0
-    expect(subject).to receive(:submit).with([action1]).exactly(3).times do
+    subject.register
+
+    expect(subject.client).to receive(:bulk).with(anything).exactly(3).times do
       if (call_count += 1) <= 2
         raise "error first two times"
       else
         {"errors" => false}
       end
     end
-    subject.register
+
     subject.receive(event1)
-    subject.close
+    subject.flush
   end
 
   it "should retry actions with response status of 503" do
@@ -77,7 +88,7 @@ describe "failures in bulk class expected behavior", :integration => true do
     subject.receive(event1)
     subject.receive(event1)
     subject.receive(event2)
-    subject.buffer_flush(:final => true)
+    subject.flush
     sleep(3)
   end
 
@@ -87,7 +98,7 @@ describe "failures in bulk class expected behavior", :integration => true do
     expect(subject).to receive(:submit).with([action1]).twice.and_call_original
     subject.register
     subject.receive(event1)
-    subject.buffer_flush(:final => true)
+    subject.flush
     sleep(3)
   end
 
@@ -101,7 +112,7 @@ describe "failures in bulk class expected behavior", :integration => true do
     expect(subject).to receive(:submit).with([action1]).exactly(max_retries+1).times.and_call_original
     subject.register
     subject.receive(event1)
-    subject.buffer_flush(:final => true)
+    subject.flush
     sleep(5)
   end
 
@@ -122,9 +133,8 @@ describe "failures in bulk class expected behavior", :integration => true do
   it "successful requests should not be appended to retry queue" do
     subject.register
     subject.receive(event1)
-    expect(subject).not_to receive(:retry_push)
+    expect(subject).to receive(:submit).once.and_call_original
     subject.close
-
     @es.indices.refresh
     sleep(5)
     Stud::try(10.times) do
