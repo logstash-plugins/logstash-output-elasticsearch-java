@@ -28,7 +28,6 @@ describe "outputs/elasticsearch_java" do
       it "should set host to localhost" do
         expect(LogStash::Outputs::ElasticSearchJavaPlugins::Protocols::TransportClient).to receive(:new).with({
           :hosts => ["127.0.0.1"],
-          :port => "9300-9305",
           :protocol => "transport",
           :client_settings => {
             "client.transport.sniff" => false,
