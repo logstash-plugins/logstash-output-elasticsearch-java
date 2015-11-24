@@ -10,8 +10,7 @@ describe "transport client create actions", :integration => true do
       "index" => "logstash-create",
       "template_overwrite" => true,
       "protocol" => "transport",
-      "hosts" => get_host(),
-      "port" => get_port('transport'),
+      "hosts" => "#{get_host()}:#{get_port('transport')}",
       "action" => action,
       "network_host" => get_local_host
     }
@@ -53,6 +52,7 @@ describe "transport client create actions", :integration => true do
       subject.register
       subject.receive(LogStash::Event.new("message" => "sample message here"))
       subject.flush
+      require 'pry'; binding.pry
       @es.indices.refresh
       # Wait or fail until everything's indexed.
       Stud::try(3.times) do

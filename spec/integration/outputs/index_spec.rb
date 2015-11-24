@@ -52,9 +52,8 @@ describe "an indexer with custom index_type", :integration => true do
       }
       output {
         elasticsearch_java {
-          hosts => "#{get_host()}"
+          hosts => "#{get_host()}:#{get_port('transport')}"
           network_host => "#{get_local_host}"
-          port => "#{get_port('transport')}"
           protocol => "transport"
           index => "#{index}"
           flush_size => #{flush_size}
@@ -78,9 +77,8 @@ describe "an indexer with no type value set (default to logs)", :integration => 
       }
       output {
         elasticsearch_java {
-          hosts => "#{get_host()}"
+          hosts => "#{get_host()}:#{get_port('transport')}"
           network_host => "#{get_local_host}"
-          port => "#{get_port('transport')}"
           protocol => "transport"
           index => "#{index}"
           flush_size => #{flush_size}

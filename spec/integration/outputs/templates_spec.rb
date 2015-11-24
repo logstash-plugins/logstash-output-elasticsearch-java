@@ -10,8 +10,7 @@ describe "index template expected behavior", :integration => true do
           "manage_template" => true,
           "template_overwrite" => true,
           "protocol" => protocol,
-          "hosts" => "#{get_host()}",
-          "port" => "#{get_port('transport')}",
+          "hosts" => "#{get_host()}:#{get_port('transport')}",
           "network_host" => get_local_host
         }
         next LogStash::Outputs::ElasticSearchJava.new(settings)

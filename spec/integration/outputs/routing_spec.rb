@@ -46,8 +46,7 @@ describe "(transport protocol) index events with fieldref in routing value", :in
       }
       output {
         elasticsearch_java {
-          hosts => "#{get_host()}"
-          port => "#{get_port('transport')}"
+          hosts => "#{get_host()}:#{get_port('transport')}"
           protocol => "transport"
           index => "#{index}"
           flush_size => #{flush_size}

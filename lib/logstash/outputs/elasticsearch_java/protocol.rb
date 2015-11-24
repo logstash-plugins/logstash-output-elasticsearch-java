@@ -239,11 +239,10 @@ module LogStash
 
         class TransportClient < NodeClient
           def client
-            return @client if @client
-            @client = build_client(@options)
-            return @client
+            CLIENT_MUTEX.synchronize do
+              @client ||= build_client(@options)
+            end
           end
-
 
           private
           def build_client(options)
@@ -256,6 +255,7 @@ module LogStash
               matches = host.match /(.+)(?:.*)/
 
               inet_addr = java.net.InetAddress.getByName(matches[1])
+              require 'pry'; binding.pry
               port = (matches[2] || options[:port]).to_i
               client.addTransportAddress(
                 org.elasticsearch.common.transport.InetSocketTransportAddress.new(

@@ -10,8 +10,7 @@ describe "all protocols update actions", :integration => true do
       "index" => "logstash-update",
       "template_overwrite" => true,
       "protocol" => protocol,
-      "hosts" => get_host(),
-      "port" => get_port(protocol),
+      "hosts" => "#{get_host()}:#{get_port(protocol)}",
       "network_host" => get_local_host,
       "action" => "update"
     }
