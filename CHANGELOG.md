@@ -1,3 +1,6 @@
+## 2.1.0
+ - Port option no longer allowed
+ - Majority of code now shared with logstash-output-elasticsearch
 ## 2.0.2
  - Update loading of addons to conform with new naming scheme (replaced - with _)
 ## 2.0.1
