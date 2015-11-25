@@ -136,7 +136,7 @@ class LogStash::Outputs::ElasticSearchJava < LogStash::Outputs::Base
   # will bind to this ip. This ip MUST be reachable by all nodes in the Elasticsearch cluster
   config :network_host, :validate => :string, :required => true
 
-  def build_client
+  def client_options
     client_settings = {}
     client_settings["cluster.name"] = @cluster if @cluster
     client_settings["network.host"] = @network_host if @network_host
@@ -163,8 +163,10 @@ class LogStash::Outputs::ElasticSearchJava < LogStash::Outputs::Base
     options.merge! update_options if @action == 'update'
 
     options
+  end
 
-    @client = client_class.new(options)
+  def build_client
+    @client = client_class.new(client_options)
   end
 
   def close
