@@ -212,10 +212,10 @@ module LogStash module Outputs module ElasticSearchJavaPlugins module Protocols
         build()
 
       client_options[:hosts].each do |host|
-        matches = host.match /([^:+]+):(\d+)/
+        matches = host.match /([^:+]+)(:(\d+))?/
 
         inet_addr = java.net.InetAddress.getByName(matches[1])
-        port = (matches[2] || 9300).to_i
+        port = (matches[3] || 9300).to_i
         client.addTransportAddress(
           org.elasticsearch.common.transport.InetSocketTransportAddress.new(
             inet_addr, port
