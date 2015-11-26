@@ -1,3 +1,6 @@
+## 2.1.1
+ - Support Elasticsearch 2.1.0
+ - Fix issue where transport client w/o port specified breaks
 ## 2.1.0
  - Port option no longer allowed
  - Majority of code now shared with logstash-output-elasticsearch
