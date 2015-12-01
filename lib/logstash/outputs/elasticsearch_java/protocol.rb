@@ -206,10 +206,10 @@ module LogStash module Outputs module ElasticSearchJavaPlugins module Protocols
   class TransportClient < NodeClient
     private
     def make_client
-      client = org.elasticsearch.client.transport.TransportClient.
-        builder().
-        settings((settings.build)).
-        build()
+      builder = org.elasticsearch.client.transport.TransportClient.builder()
+      client = client_options[:elasticsearch_plugins].reduce(builder) do |b,plugin_class|
+        b.add_plugin(plugin_class)
+      end.settings((settings.build)).build()
 
       client_options[:hosts].each do |host|
         matches = host.match /([^:+]+)(:(\d+))?/
