@@ -6,6 +6,7 @@ require 'logstash/outputs/elasticsearch_java'
 module LogStash module Outputs module ElasticSearchJavaPlugins module Protocols
   DEFAULT_OPTIONS = {
     :port => 9300,
+    :elasticsearch_plugins => []
   }
 
   class NodeClient
