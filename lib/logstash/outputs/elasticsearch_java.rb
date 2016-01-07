@@ -135,7 +135,7 @@ class LogStash::Outputs::ElasticSearchJava < LogStash::Outputs::Base
   config :cluster, :validate => :string
 
   # For the `node` protocol, if you do not specify `host`, it will attempt to use
-  # multicast discovery to connect to Elasticsearch.  If http://www.elastic.co/guide/en/elasticsearch/guide/current/_important_configuration_changes.html#_prefer_unicast_over_multicast[multicast is disabled] in Elasticsearch, 
+  # multicast discovery to connect to Elasticsearch.  If http://www.elastic.co/guide/en/elasticsearch/guide/1.x/_important_configuration_changes.html#_prefer_unicast_over_multicast[multicast is disabled] in Elasticsearch, 
   # you must include the hostname or IP address of the host(s) to use for Elasticsearch unicast discovery.
   # Remember the `node` protocol uses the http://www.elastic.co/guide/en/elasticsearch/reference/current/modules-transport.html#modules-transport[transport] address (eg. 9300, not 9200).
   #     `"127.0.0.1"`
