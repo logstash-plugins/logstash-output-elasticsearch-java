@@ -113,8 +113,8 @@ class LogStash::Outputs::ElasticSearchJava < LogStash::Outputs::Base
   # configured).
   #
   # If you do not specify the `host` parameter, it will use  multicast for http://www.elastic.co/guide/en/elasticsearch/reference/current/modules-discovery-zen.html[Elasticsearch discovery].  While this may work in a test/dev environment where multicast is enabled in 
-  # Elasticsearch, we strongly recommend http://www.elastic.co/guide/en/elasticsearch/guide/current/_important_configuration_changes.html#_prefer_unicast_over_multicast[disabling multicast]
-  # in Elasticsearch.  To connect to an Elasticsearch cluster with multicast disabled,
+  # Elasticsearch, we strongly recommend http://www.elastic.co/guide/en/elasticsearch/guide/current/_important_configuration_changes.html#unicast[using unicast]
+  # in Elasticsearch.  To connect to an Elasticsearch cluster with unicast,
   # you must include the `host` parameter (see relevant section above).  
   #
   # The 'transport' protocol will connect to the host you specify and will
