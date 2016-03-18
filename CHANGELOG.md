@@ -1,3 +1,5 @@
+# 2.1.2
+  - New dependency requirements for logstash-core for the 5.0 release
 ## 2.1.1
  - Support Elasticsearch 2.1.0
  - Fix issue where transport client w/o port specified breaks

@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name            = 'logstash-output-elasticsearch_java'
-  s.version         = '2.1.1'
+  s.version         = '2.1.2'
   s.licenses        = ['apache-2.0']
   s.summary         = "Logstash Output to Elasticsearch using Java node/transport client"
   s.description     = "Output events to elasticsearch using the java client"
@@ -23,7 +23,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'elasticsearch', ['>= 1.0.13', '~> 1.0']
   s.add_runtime_dependency 'stud', ['>= 0.0.17', '~> 0.0']
   s.add_runtime_dependency 'cabin', ['~> 0.6']
-  s.add_runtime_dependency "logstash-core", ">= 2.0.0.beta2", "< 3.0.0"
+  s.add_runtime_dependency "logstash-core", ">= 2.0.0", "< 6.0.0.alpha1"
   s.add_runtime_dependency "logstash-output-elasticsearch", ">= 2.1.4"
 
   s.add_development_dependency 'ftw', '~> 0.0.42'
