@@ -10,7 +10,10 @@ require "uri" # for escaping user input
 require "logstash/outputs/elasticsearch_java/protocol"
 require "logstash/outputs/elasticsearch"
 
-# This output lets you store logs in Elasticsearch using the native 'node' and 'transport'
+# IMPORTANT: This plugin is no longer supported. Please use the recommended
+# <<plugins-outputs-elasticsearch,Elasticsearch output plugin>> instead.
+#
+#This output lets you store logs in Elasticsearch using the native 'node' and 'transport'
 # protocols. It is highly recommended to use the regular 'logstash-output-elasticsearch' output
 # which uses HTTP instead. This output is, in-fact, sometimes slower, and never faster than that one.
 # Additionally, upgrading your Elasticsearch cluster may require you to simultaneously update this

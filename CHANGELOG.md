@@ -1,3 +1,5 @@
+# 2.1.4
+  - Docs: Add note indicating that the elasticsearch_java output plugin is no longer supported
 # 2.1.3
   - Depend on logstash-core-plugin-api instead of logstash-core, removing the need to mass update plugins on major releases of logstash
 # 2.1.2
