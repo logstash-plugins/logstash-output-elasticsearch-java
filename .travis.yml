@@ -1,13 +1,21 @@
+---
 sudo: false
-before_install:
-  - curl -s https://download.elasticsearch.org/elasticsearch/release/org/elasticsearch/distribution/tar/elasticsearch/2.0.0/elasticsearch-2.0.0.tar.gz  > elasticsearch.tar.gz
-  - tar -xzf elasticsearch.tar.gz
-  - cd elasticsearch*/ && bin/elasticsearch &
-  - sleep 10 && curl http://localhost:9200
-before_script:
-  - bundle exec rake vendor
 language: ruby
 cache: bundler
+env:
 rvm:
-  - jruby-19mode
-script: bundle exec rspec spec && bundle exec rspec spec
+  - jruby-1.7.25
+matrix:
+  include:
+    - rvm: jruby-1.7.25
+      env: LOGSTASH_BRANCH=master
+    - rvm: jruby-1.7.25
+      env: LOGSTASH_BRANCH=5.x
+    - rvm: jruby-9.1.9.0
+      env: LOGSTASH_BRANCH=feature/9000
+  allow_failures:
+    - rvm: jruby-9.1.9.0
+  fast_finish: true
+install: true
+script: ci/build.sh
+jdk: oraclejdk8
