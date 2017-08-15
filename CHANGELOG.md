@@ -1,3 +1,6 @@
+## 2.1.5
+  - Fix some documentation issues
+
 # 2.1.3
   - Depend on logstash-core-plugin-api instead of logstash-core, removing the need to mass update plugins on major releases of logstash
 # 2.1.2

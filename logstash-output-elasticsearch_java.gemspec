@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name            = 'logstash-output-elasticsearch_java'
-  s.version         = '2.1.4'
+  s.version         = '2.1.5'
   s.licenses        = ['apache-2.0']
   s.summary         = "Logstash Output to Elasticsearch using Java node/transport client"
   s.description     = "This gem is a Logstash plugin required to be installed on top of the Logstash core pipeline using $LS_HOME/bin/logstash-plugin install gemname. This gem is not a stand-alone program"
