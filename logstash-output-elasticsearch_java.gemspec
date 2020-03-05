@@ -29,5 +29,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'ftw', '~> 0.0.42'
   s.add_development_dependency 'logstash-input-generator'
   s.add_development_dependency 'logstash-devutils'
+  s.add_development_dependency 'insist'
   s.add_development_dependency 'longshoreman'
 end

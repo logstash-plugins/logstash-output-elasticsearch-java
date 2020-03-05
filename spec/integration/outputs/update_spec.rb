@@ -1,4 +1,5 @@
 require_relative "../../../spec/es_spec_helper"
+require "insist"
 
 describe "all protocols update actions", :integration => true do
   require "logstash/outputs/elasticsearch_java"

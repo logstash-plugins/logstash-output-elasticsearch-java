@@ -1,9 +1,10 @@
 require_relative "../../../spec/es_spec_helper"
+require "insist"
 
 describe "index template expected behavior", :integration => true do
   ["transport"].each do |protocol|
     context "with protocol => #{protocol}" do
-        
+
       subject! do
         require "logstash/outputs/elasticsearch_java"
         settings = {

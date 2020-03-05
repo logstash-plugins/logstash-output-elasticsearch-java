@@ -1,4 +1,5 @@
 require_relative "../../../spec/es_spec_helper"
+require "insist"
 
 shared_examples "a routing indexer" do
     let(:index) { 10.times.collect { rand(10).to_s }.join("") }

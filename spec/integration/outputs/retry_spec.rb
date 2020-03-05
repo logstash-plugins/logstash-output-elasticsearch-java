@@ -1,6 +1,7 @@
 require "elasticsearch"
 require "logstash/outputs/elasticsearch_java"
 require_relative "../../../spec/es_spec_helper"
+require "insist"
 
 describe "failures in bulk class expected behavior", :integration => true do
   let(:template) { '{"template" : "not important, will be updated by :index"}' }
