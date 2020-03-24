@@ -1,3 +1,10 @@
+# NOTE
+
+This repository is now archived as the elasticsearch_java plugin is no longer maintained. This plugin used the node or transport protocols to communicate with elasticsearch. These protocols have been deprecated, and the plugin hasn't been maintained since Elasticsearch 2.1.0.
+
+If you need to send data to elasticsearch using logstash you can use the [logstash-output-elasticsearch](https://github.com/logstash-plugins/logstash-output-elasticsearch) plugin that ships with Logstash.
+For more instructions check out [our getting started documentation](https://www.elastic.co/guide/en/logstash/current/advanced-pipeline.html#indexing-parsed-data-into-elasticsearch).
+
 # Logstash Plugin
 
 [![Travis Build Status](https://travis-ci.org/logstash-plugins/logstash-output-elasticsearch_java.svg)](https://travis-ci.org/logstash-plugins/logstash-output-elasticsearch_java)
